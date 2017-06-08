@@ -2,6 +2,7 @@ import { default as PrettyText, buildOptions } from 'pretty-text/pretty-text';
 import { performEmojiUnescape, buildEmojiUrl } from 'pretty-text/emoji';
 import WhiteLister from 'pretty-text/white-lister';
 import { sanitize as textSanitize } from 'pretty-text/sanitizer';
+import loadScript from 'discourse/lib/load-script';
 
 function getOpts() {
   const siteSettings = Discourse.__container__.lookup('site-settings:main');
@@ -17,6 +18,18 @@ function getOpts() {
 export function cook(text) {
   return new Handlebars.SafeString(new PrettyText(getOpts()).cook(text));
 }
+
+// everything should eventually move to async API and this should be renamed
+// cook
+export function cookAsync(text) {
+  if (Discourse.MarkdownItURL) {
+    return loadScript(Discourse.MarkdownItURL)
+      .then(()=>cook(text));
+  } else {
+    return Ember.RSVP.Promise.resolve(cook(text));
+  }
+}
+
 
 export function sanitize(text) {
   return textSanitize(text, new WhiteLister(getOpts()));

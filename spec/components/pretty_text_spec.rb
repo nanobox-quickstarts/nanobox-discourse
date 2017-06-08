@@ -489,4 +489,66 @@ HTML
     end
   end
 
+  context "markdown it" do
+
+    before do
+      SiteSetting.enable_experimental_markdown_it = true
+    end
+
+    it "can handle mixed lists" do
+      # known bug in old md engine
+      cooked = PrettyText.cook("* a\n\n1. b")
+      expect(cooked).to match_html("<ul>\n<li>a</li>\n</ul><ol>\n<li>b</li>\n</ol>")
+    end
+
+      it "can handle traditional vs non traditional newlines" do
+        SiteSetting.traditional_markdown_linebreaks = true
+        expect(PrettyText.cook("1\n2")).to match_html "<p>1 2</p>"
+
+        SiteSetting.traditional_markdown_linebreaks = false
+        expect(PrettyText.cook("1\n2")).to match_html "<p>1<br>\n2</p>"
+      end
+
+      it "can handle mentions" do
+        Fabricate(:user, username: "sam")
+        expect(PrettyText.cook("hi @sam! hi")).to match_html '<p>hi <a class="mention" href="/u/sam">@sam</a>! hi</p>'
+      end
+
+      it "can handle mentions inside a hyperlink" do
+      expect(PrettyText.cook("<a> @inner</a> ")).to match_html '<p><a> @inner</a></p>'
+      end
+
+      it "can handle mentions inside a hyperlink" do
+        expect(PrettyText.cook("[link @inner](http://site.com)")).to match_html '<p><a href="http://site.com" rel="nofollow noopener">link @inner</a></p>'
+      end
+
+      it "can handle a list of mentions" do
+        expect(PrettyText.cook("@a,@b")).to match_html('<p><span class="mention">@a</span>,<span class="mention">@b</span></p>')
+      end
+
+      it "can handle emoji by name" do
+
+        expected = <<HTML
+<p><img src="/images/emoji/emoji_one/smile.png?v=3\" title=":smile:" class="emoji" alt=":smile:"><img src="/images/emoji/emoji_one/sunny.png?v=3" title=":sunny:" class="emoji" alt=":sunny:"></p>
+HTML
+        expect(PrettyText.cook(":smile::sunny:")).to eq(expected.strip)
+      end
+
+      it "can handle emoji by translation" do
+        expected = '<p><img src="/images/emoji/emoji_one/slight_smile.png?v=3" title=":slight_smile:" class="emoji" alt=":slight_smile:"></p>'
+        expect(PrettyText.cook(":-P")).to eq(expected)
+      end
+
+#       it "do basic quoting" do
+#         topic = Fabricate(:topic, title: "this is a test topic :slight_smile:")
+#         expected = <<HTML
+# <aside class="quote" data-post="2" data-topic="#{topic.id}"><div class="title">
+# <div class="quote-controls"></div><a href="http://test.localhost/t/this-is-a-test-topic-slight-smile/#{topic.id}/2">This is a test topic <img src="/images/emoji/emoji_one/slight_smile.png?v=3" title="slight_smile" alt="slight_smile" class="emoji"></a>
+# </div>
+# <blockquote><p>ddd</p></blockquote></aside>
+# HTML
+#         expect(PrettyText.cook("[quote=\"EvilTrout, post:2, topic:#{topic.id}\"]ddd\n[/quote]", topic_id: 1)).to match_html expected
+#       end
+  end
+
 end

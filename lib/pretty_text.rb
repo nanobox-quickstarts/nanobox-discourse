@@ -50,19 +50,10 @@ module PrettyText
     end
   end
 
-  def self.create_es6_context
-    ctx = MiniRacer::Context.new(timeout: 15000)
-
-    ctx.eval("window = {}; window.devicePixelRatio = 2;") # hack to make code think stuff is retina
-
-    if Rails.env.development? || Rails.env.test?
-      ctx.attach("console.log", proc { |l| p l })
-    end
-
-    ctx_load(ctx, "#{Rails.root}/app/assets/javascripts/discourse-loader.js")
-    ctx_load(ctx, "vendor/assets/javascripts/lodash.js")
-    manifest = File.read("#{Rails.root}/app/assets/javascripts/pretty-text-bundle.js")
+  def self.ctx_load_manifest(ctx, name)
+    manifest = File.read("#{Rails.root}/app/assets/javascripts/#{name}")
     root_path = "#{Rails.root}/app/assets/javascripts/"
+
     manifest.each_line do |l|
       l = l.chomp
       if l =~ /\/\/= require (\.\/)?(.*)$/
@@ -74,6 +65,22 @@ module PrettyText
         end
       end
     end
+  end
+
+  def self.create_es6_context
+    ctx = MiniRacer::Context.new(timeout: 15000)
+
+    ctx.eval("window = {}; window.devicePixelRatio = 2;") # hack to make code think stuff is retina
+
+    if Rails.env.development? || Rails.env.test?
+      ctx.attach("console.log", proc { |l| p l })
+    end
+
+    ctx_load(ctx, "#{Rails.root}/app/assets/javascripts/discourse-loader.js")
+    ctx_load(ctx, "vendor/assets/javascripts/lodash.js")
+    ctx_load_manifest(ctx, "pretty-text-bundle.js")
+
+    root_path = "#{Rails.root}/app/assets/javascripts/"
 
     apply_es6_file(ctx, root_path, "discourse/lib/utilities")
 
@@ -138,6 +145,12 @@ module PrettyText
           paths[:S3CDN] = SiteSetting.s3_cdn_url
         end
         paths[:S3BaseUrl] = Discourse.store.absolute_base_url
+      end
+
+      if SiteSetting.enable_experimental_markdown_it
+        unless context.eval("window.markdownit")
+          ctx_load_manifest(context, "markdown-it-bundle.js")
+        end
       end
 
       context.eval("__optInput = {};")

@@ -33,7 +33,7 @@ export function buildOptions(state) {
     'html': true,
     'category-hashtag': true,
     'onebox': true,
-    'newline': true
+    'newline': !siteSettings.traditional_markdown_linebreaks
   };
 
   const options = {
@@ -48,6 +48,7 @@ export function buildOptions(state) {
     getCurrentUser,
     currentUser,
     mentionLookup: state.mentionLookup,
+    enableExperimentalMarkdownIt: siteSettings.enable_experimental_markdown_it,
     allowedHrefSchemes: siteSettings.allowed_href_schemes ? siteSettings.allowed_href_schemes.split('|') : null
   };
 

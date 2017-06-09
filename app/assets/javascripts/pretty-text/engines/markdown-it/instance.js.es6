@@ -1,6 +1,7 @@
 import mentions from 'pretty-text/engines/markdown-it/mentions';
 import emoji from 'pretty-text/engines/markdown-it/emoji';
 import quotes from 'pretty-text/engines/markdown-it/quotes';
+import onebox from 'pretty-text/engines/markdown-it/onebox';
 
 
 export default function(opts) {
@@ -15,6 +16,10 @@ export default function(opts) {
 
   if (opts.features.mentions) {
     engine = engine.use(mentions);
+  }
+
+  if (opts.features.onebox) {
+    engine.use(onebox);
   }
 
   engine.use(quotes);

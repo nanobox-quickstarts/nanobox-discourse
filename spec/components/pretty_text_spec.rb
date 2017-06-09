@@ -539,11 +539,23 @@ HTML
         expect(PrettyText.cook(":)")).to eq(expected)
       end
 
-      it "handles boundries correctly" do
+      it "handles emoji boundries correctly" do
         expect(PrettyText.cook(",:)")).to include("emoji")
         expect(PrettyText.cook(":)\n")).to include("emoji")
         expect(PrettyText.cook("a :)")).to include("emoji")
         expect(PrettyText.cook(":),")).not_to include("emoji")
+      end
+
+      it "handles onebox correctly" do
+        expect(PrettyText.cook("a\nhttp://a.com")).to include('onebox')
+        expect(PrettyText.cook("> http://a.com")).not_to include('onebox')
+        expect(PrettyText.cook("a\nhttp://a.com a")).not_to include('onebox')
+        expect(PrettyText.cook("a\nhttp://a.com\na")).to include('onebox')
+        expect(PrettyText.cook("http://a.com")).to include('onebox')
+        expect(PrettyText.cook("a.com")).not_to include('onebox')
+        expect(PrettyText.cook("http://a.com ")).to include('onebox')
+        expect(PrettyText.cook("http://a.com a")).not_to include('onebox')
+        expect(PrettyText.cook("- http://a.com")).not_to include('onebox')
       end
 
 #       it "do basic quoting" do

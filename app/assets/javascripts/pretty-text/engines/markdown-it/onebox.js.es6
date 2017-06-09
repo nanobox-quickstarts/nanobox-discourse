@@ -1,7 +1,7 @@
 
 function applyOnebox(state, silent) {
   if (silent || !state.tokens || state.tokens.length < 3) {
-    return false;
+    return;
   }
 
   let i;
@@ -50,12 +50,10 @@ function applyOnebox(state, silent) {
 
           // decorate...
           attrs.push(["class", "onebox"]);
-          return true;
         }
       }
     }
   }
-  return false;
 }
 
 

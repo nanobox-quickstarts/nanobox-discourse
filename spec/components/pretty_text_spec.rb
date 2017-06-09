@@ -547,6 +547,10 @@ HTML
       end
 
       it "handles onebox correctly" do
+        # we expect 2 oneboxes
+        expect(PrettyText.cook("http://a.com\nhttp://b.com").split("onebox").length).to eq(3)
+        expect(PrettyText.cook("http://a.com\n\nhttp://b.com").split("onebox").length).to eq(3)
+
         expect(PrettyText.cook("a\nhttp://a.com")).to include('onebox')
         expect(PrettyText.cook("> http://a.com")).not_to include('onebox')
         expect(PrettyText.cook("a\nhttp://a.com a")).not_to include('onebox')

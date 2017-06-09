@@ -62,6 +62,7 @@ function imageFor(code, opts) {
   }
 }
 
+// straight forward :smile: to emoji image
 function applyEmojiName(state, isSpace, isPunctChar, discourseOptions) {
   let pos = state.pos;
 

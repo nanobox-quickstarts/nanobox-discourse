@@ -536,7 +536,14 @@ HTML
 
       it "can handle emoji by translation" do
         expected = '<p><img src="/images/emoji/emoji_one/slight_smile.png?v=3" title=":slight_smile:" class="emoji" alt=":slight_smile:"></p>'
-        expect(PrettyText.cook(":-P")).to eq(expected)
+        expect(PrettyText.cook(":)")).to eq(expected)
+      end
+
+      it "handles boundries correctly" do
+        expect(PrettyText.cook(",:)")).to include("emoji")
+        expect(PrettyText.cook(":)\n")).to include("emoji")
+        expect(PrettyText.cook("a :)")).to include("emoji")
+        expect(PrettyText.cook(":),")).not_to include("emoji")
       end
 
 #       it "do basic quoting" do

@@ -13,7 +13,10 @@ registerOption((siteSettings, opts, state) => {
 });
 
 // This allows us to efficiently search for aliases
-
+// We build a data structure that allows us to quickly
+// search through our N next chars to see if any match
+// one of our alias emojis.
+//
 function buildTranslationTree() {
   let tree = [];
   let lastNode;
@@ -118,7 +121,7 @@ function applyEmojiName(state, isSpace, isPunctChar, discourseOptions) {
 }
 
 // translations are "text" shortcuts like :) and :( and ;)
-function applyEmojiTranslations(state) {
+function applyEmojiTranslations(state, isSpace, isPunctChar, discourseOptions) {
   translationTree = translationTree || buildTranslationTree();
 
   let pos = state.pos;
@@ -139,7 +142,7 @@ function applyEmojiTranslations(state) {
         pos++;
         search = true;
         if (typeof currentTree === "string") {
-          found = true;
+          found = currentTree;
         }
         break;
       }
@@ -150,14 +153,43 @@ function applyEmojiTranslations(state) {
     return false;
   }
 
+  // quick boundary check
+  if (state.pos > 0) {
+    let leading = state.src.charAt(state.pos-1);
+    if (!isSpace(leading.charCodeAt(0)) && !isPunctChar(leading)) {
+      return false;
+    }
+  }
 
+  // check trailing for punct or space
+  if (pos < state.posMax) {
+    let trailing = state.src.charCodeAt(pos+1);
+    if (!isSpace(trailing)){
+      return false;
+    }
+  }
+
+
+  let info;
+  if (info = imageFor(found, discourseOptions)) {
+
+    let token = state.push('emoji', 'img', 0);
+    token.attrs = [['src', info.url],
+                   ['title', info.title],
+                   ['class', info.classes],
+                   ['alt', info.title]];
+
+    state.pos = pos+1;
+
+    return true;
+  }
 
   return false;
 }
 
 function applyEmoji(state, silent, isSpace, isPunctChar, discourseOptions) {
   if (!silent) {
-    return applyEmojiName(state, isSpace, isPunctChar, discourseOptions) || applyEmojiTranslations(state);
+    return applyEmojiName(state, isSpace, isPunctChar, discourseOptions) || applyEmojiTranslations(state, isSpace, isPunctChar, discourseOptions);
   }
 }
 

@@ -2,6 +2,7 @@ import mentions from 'pretty-text/engines/markdown-it/mentions';
 import emoji from 'pretty-text/engines/markdown-it/emoji';
 import quotes from 'pretty-text/engines/markdown-it/quotes';
 import onebox from 'pretty-text/engines/markdown-it/onebox';
+import bbcode from 'pretty-text/engines/markdown-it/bbcode';
 
 
 export default function(opts) {
@@ -22,11 +23,16 @@ export default function(opts) {
     engine.use(onebox);
   }
 
-  engine.use(quotes);
-
   if (opts.features.emoji) {
     engine.use(emoji);
   }
 
+  let bbcodeInstance = bbcode.create();
+
+  if (opts.features.quote) {
+    bbcodeInstance.addBlockRule(quotes);
+  }
+
+  engine.use(bbcodeInstance.plugin);
   return engine;
 }

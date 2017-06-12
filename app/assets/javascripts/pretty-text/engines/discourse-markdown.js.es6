@@ -385,9 +385,11 @@ export function cook(raw, opts) {
   currentOpts = opts;
 
   hoisted = {};
-  raw = hoistCodeBlocksAndSpans(raw);
 
-  preProcessors.forEach(p => raw = p(raw));
+  if (!currentOpts.enableExperimentalMarkdownIt) {
+    raw = hoistCodeBlocksAndSpans(raw);
+    preProcessors.forEach(p => raw = p(raw));
+  }
 
   const whiteLister = new WhiteLister(opts);
 

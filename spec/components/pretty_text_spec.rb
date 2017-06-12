@@ -562,6 +562,20 @@ HTML
         expect(PrettyText.cook("- http://a.com")).not_to include('onebox')
       end
 
+      it "can handle bbcode quote blocks" do
+
+        expected = <<-HTML
+<p>a</p>
+<p><aside class="quote"><blockquote>
+<p>b</p>
+<p>c</p>
+</blockquote></aside></p>
+<p>d</p>
+HTML
+
+        expect(PrettyText.cook("test\n\n[quote=test a=1 b=2 c=' x ']\ntest\n[/quote]\n")).to match_html(expected)
+      end
+
 #       it "do basic quoting" do
 #         topic = Fabricate(:topic, title: "this is a test topic :slight_smile:")
 #         expected = <<HTML

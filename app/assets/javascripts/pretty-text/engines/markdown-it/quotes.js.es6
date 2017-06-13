@@ -1,16 +1,20 @@
+import { performEmojiUnescape } from 'pretty-text/emoji';
+import { registerOption } from 'pretty-text/pretty-text';
+
+registerOption((siteSettings, opts) => {
+  opts.enableEmoji = siteSettings.enable_emoji;
+  opts.emojiSet = siteSettings.emoji_set;
+});
+
 export default {
   tag: 'quote',
 
   before: function(state, attrs, md) {
 
-    let token    = state.push('bbcode_open', 'aside', 1);
-    token.attrs  = [['class', 'quote']];
-    token.block  = true;
-
     let options = md.options.discourse;
 
     let quoteInfo = attrs['_default'];
-    let username, postNumber, topicId, avatarImg;
+    let username, postNumber, topicId, avatarImg, full;
 
     if (quoteInfo) {
       let split = quoteInfo.split(/\,\s*/);
@@ -20,12 +24,36 @@ export default {
       for(i=1;i<split.length;i++) {
         if (split[i].indexOf("post:") === 0) {
           postNumber = parseInt(split[i].substr(5),10);
+          continue;
         }
 
         if (split[i].indexOf("topic:") === 0) {
           topicId = parseInt(split[i].substr(6),10);
+          continue;
+        }
+
+        if (split[i].indexOf(/full:\s*true/) === 0) {
+          full = true;
+          continue;
         }
       }
+    }
+
+
+    let token    = state.push('bbcode_open', 'aside', 1);
+    token.attrs  = [['class', 'quote']];
+    token.block  = true;
+
+    if (topicId) {
+      token.attrs.push(['data-topic', topicId]);
+    }
+
+    if (postNumber) {
+      token.attrs.push(['data-post', postNumber]);
+    }
+
+    if (full) {
+      token.attrs.push(['data-full', 'true']);
     }
 
     if (options.lookupAvatarByPostNumber) {
@@ -67,17 +95,17 @@ export default {
 
           let title = topicInfo.title;
 
-          // TODO : title unescape for emoji
-          // if (options.features.emoji) {
-          //   title = performEmojiUnescape(topicInfo.title, {
-          //     getURL: opts.getURL, emojiSet: opts.emojiSet
-          //   });
-          // }
+
+          if (options.enableEmoji) {
+            title = performEmojiUnescape(topicInfo.title, {
+              getURL: options.getURL, emojiSet: options.emojiSet
+            });
+          }
 
           token = state.push('link_open', 'a', 1);
           token.attrs = [[ 'href', href ]];
 
-          token = state.push('text', '', 0);
+          token = state.push('html_block', '', 0);
           token.content = title;
 
           state.push('link_close', 'a', -1);

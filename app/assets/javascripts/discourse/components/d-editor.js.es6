@@ -279,9 +279,7 @@ export default Ember.Component.extend({
     const value = this.get('value');
     const markdownOptions = this.get('markdownOptions') || {};
 
-    markdownOptions.siteSettings = this.siteSettings;
-
-    cookAsync(value).then(cooked => {
+    cookAsync(value, markdownOptions).then(cooked => {
       this.set('preview', cooked);
       Ember.run.scheduleOnce('afterRender', () => {
         if (this._state !== "inDOM") { return; }

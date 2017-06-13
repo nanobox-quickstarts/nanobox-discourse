@@ -1,4 +1,3 @@
-
 // parse a tag [test a=1 b=2] to a data structure
 // {tag: "test", attrs={a: "1", b: "2"}
 function parseBBCodeTag(src, start, max) {
@@ -63,7 +62,7 @@ function parseBBCodeTag(src, start, max) {
   }
 }
 
-function applyBBCode(state, startLine, endLine, silent, rules) {
+function applyBBCode(state, startLine, endLine, silent, rules, md) {
 
   var i, pos, nextLine,
       old_parent, old_line_max, rule,
@@ -134,22 +133,24 @@ function applyBBCode(state, startLine, endLine, silent, rules) {
 
   old_parent = state.parentType;
   old_line_max = state.lineMax;
-  state.parentType = 'container';
+  state.parentType = 'aside';
 
   // this will prevent lazy continuations from ever going past our end marker
   state.lineMax = nextLine;
 
-  rule.before(state, info.attrs);
+  rule.before.call(this, state, info.attrs, md);
 
   let lastToken = state.tokens[state.tokens.length-1];
   lastToken.map    = [ startLine, nextLine ];
-  console.log(lastToken.map);
 
   state.md.block.tokenize(state, startLine + 1, nextLine);
 
-  rule.after(state);
+  rule.after.call(this, state);
+
+  lastToken = state.tokens[state.tokens.length-1];
 
   state.parentType = old_parent;
+
   state.lineMax = old_line_max;
   state.line = nextLine + (auto_closed ? 1 : 0);
 
@@ -170,7 +171,7 @@ export default {
 
       plugin: function(md) {
         md.block.ruler.after('fence', 'bbcode', (state, startLine, endLine, silent)=> {
-          applyBBCode(state, startLine, endLine, silent, self.rules);
+          return applyBBCode(state, startLine, endLine, silent, self.rules, md);
         });
       }
     };

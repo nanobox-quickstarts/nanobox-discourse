@@ -21,7 +21,8 @@ export function buildOptions(state) {
     categoryHashtagLookup,
     userId,
     getCurrentUser,
-    currentUser
+    currentUser,
+    lookupAvatarByPostNumber
   } = state;
 
   const features = {
@@ -47,6 +48,7 @@ export function buildOptions(state) {
     userId,
     getCurrentUser,
     currentUser,
+    lookupAvatarByPostNumber,
     mentionLookup: state.mentionLookup,
     enableExperimentalMarkdownIt: siteSettings.enable_experimental_markdown_it,
     allowedHrefSchemes: siteSettings.allowed_href_schemes ? siteSettings.allowed_href_schemes.split('|') : null

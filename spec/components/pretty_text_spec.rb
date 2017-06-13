@@ -529,13 +529,13 @@ HTML
       it "can handle emoji by name" do
 
         expected = <<HTML
-<p><img src="/images/emoji/emoji_one/smile.png?v=3\" title=":smile:" class="emoji" alt=":smile:"><img src="/images/emoji/emoji_one/sunny.png?v=3" title=":sunny:" class="emoji" alt=":sunny:"></p>
+<p><img src="/images/emoji/emoji_one/smile.png?v=5\" title=":smile:" class="emoji" alt=":smile:"><img src="/images/emoji/emoji_one/sunny.png?v=5" title=":sunny:" class="emoji" alt=":sunny:"></p>
 HTML
         expect(PrettyText.cook(":smile::sunny:")).to eq(expected.strip)
       end
 
       it "can handle emoji by translation" do
-        expected = '<p><img src="/images/emoji/emoji_one/slight_smile.png?v=3" title=":slight_smile:" class="emoji" alt=":slight_smile:"></p>'
+        expected = '<p><img src="/images/emoji/emoji_one/slight_smile.png?v=5" title=":slight_smile:" class="emoji" alt=":slight_smile:"></p>'
         expect(PrettyText.cook(":)")).to eq(expected)
       end
 
@@ -562,30 +562,16 @@ HTML
         expect(PrettyText.cook("- http://a.com")).not_to include('onebox')
       end
 
-      it "can handle bbcode quote blocks" do
-
-        expected = <<-HTML
-<p>a</p>
-<p><aside class="quote"><blockquote>
-<p>b</p>
-<p>c</p>
-</blockquote></aside></p>
-<p>d</p>
+      it "do off topic quoting with emoji unescape" do
+        topic = Fabricate(:topic, title: "this is a test topic :slight_smile:")
+        expected = <<HTML
+<aside class="quote" data-post="2" data-topic="#{topic.id}"><div class="title">
+<div class="quote-controls"></div><a href="http://test.localhost/t/this-is-a-test-topic-slight-smile/#{topic.id}/2">This is a test topic <img src="/images/emoji/emoji_one/slight_smile.png?v=3" title="slight_smile" alt="slight_smile" class="emoji"></a>
+</div>
+<blockquote><p>ddd</p></blockquote></aside>
 HTML
-
-        expect(PrettyText.cook("test\n\n[quote=test a=1 b=2 c=' x ']\ntest\n[/quote]\n")).to match_html(expected)
+        expect(PrettyText.cook("[quote=\"EvilTrout, post:2, topic:#{topic.id}\"]ddd\n[/quote]", topic_id: 1)).to match_html expected
       end
-
-#       it "do basic quoting" do
-#         topic = Fabricate(:topic, title: "this is a test topic :slight_smile:")
-#         expected = <<HTML
-# <aside class="quote" data-post="2" data-topic="#{topic.id}"><div class="title">
-# <div class="quote-controls"></div><a href="http://test.localhost/t/this-is-a-test-topic-slight-smile/#{topic.id}/2">This is a test topic <img src="/images/emoji/emoji_one/slight_smile.png?v=3" title="slight_smile" alt="slight_smile" class="emoji"></a>
-# </div>
-# <blockquote><p>ddd</p></blockquote></aside>
-# HTML
-#         expect(PrettyText.cook("[quote=\"EvilTrout, post:2, topic:#{topic.id}\"]ddd\n[/quote]", topic_id: 1)).to match_html expected
-#       end
   end
 
 end

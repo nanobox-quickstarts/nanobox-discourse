@@ -534,16 +534,23 @@ HTML
         expect(PrettyText.cook(":smile::sunny:")).to eq(expected.strip)
       end
 
+      it "handles emoji boundaries correctly" do
+        cooked = PrettyText.cook("a,:man:t2:,b")
+        expected = '<p>a,<img src="/images/emoji/emoji_one/man/2.png?v=5" title=":man:t2:" class="emoji" alt=":man:t2:">,b</p>'
+        expect(cooked).to match(expected.strip)
+      end
+
       it "can handle emoji by translation" do
-        expected = '<p><img src="/images/emoji/emoji_one/slight_smile.png?v=5" title=":slight_smile:" class="emoji" alt=":slight_smile:"></p>'
-        expect(PrettyText.cook(":)")).to eq(expected)
+        expected = '<p><img src="/images/emoji/emoji_one/wink.png?v=5" title=":wink:" class="emoji" alt=":wink:"></p>'
+        expect(PrettyText.cook(";)")).to eq(expected)
       end
 
       it "handles emoji boundries correctly" do
         expect(PrettyText.cook(",:)")).to include("emoji")
-        expect(PrettyText.cook(":)\n")).to include("emoji")
+        expect(PrettyText.cook(":-)\n")).to include("emoji")
         expect(PrettyText.cook("a :)")).to include("emoji")
         expect(PrettyText.cook(":),")).not_to include("emoji")
+        expect(PrettyText.cook("abcde ^:;-P")).to include("emoji")
       end
 
       it "handles onebox correctly" do

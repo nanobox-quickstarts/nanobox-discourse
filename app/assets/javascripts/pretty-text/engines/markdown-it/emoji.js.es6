@@ -1,6 +1,7 @@
 import { registerOption } from 'pretty-text/pretty-text';
 import { buildEmojiUrl, isCustomEmoji } from 'pretty-text/emoji';
 import { translations } from 'pretty-text/emoji/data';
+import { textReplace } from 'pretty-text/engines/markdown-it/helpers';
 
 const MAX_NAME_LENGTH = 60;
 
@@ -65,79 +66,80 @@ function imageFor(code, opts) {
   }
 }
 
-// straight forward :smile: to emoji image
-function applyEmojiName(state, isSpace, isPunctChar, discourseOptions) {
-  let pos = state.pos;
+function getEmojiName(content, pos, state) {
 
-  // 58 = :
-  if (state.src.charCodeAt(pos) !== 58) {
-    return false;
+  if (content.charCodeAt(pos) !== 58) {
+    return;
   }
 
   if (pos > 0) {
-    let prev = state.src.charCodeAt(pos-1);
-    if (!isSpace(prev) && !isPunctChar(String.fromCharCode(prev))) {
-      return false;
+    let prev = content.charCodeAt(pos-1);
+    if (!state.md.utils.isSpace(prev) && !state.md.utils.isPunctChar(String.fromCharCode(prev))) {
+      return;
     }
   }
 
   pos++;
-  if (state.src.charCodeAt(pos) === 58) {
-    return false;
+  if (content.charCodeAt(pos) === 58) {
+    return;
   }
 
   let length = 0;
   while(length < MAX_NAME_LENGTH) {
     length++;
 
-    if (state.src.charCodeAt(pos+length) === 58) {
+    if (content.charCodeAt(pos+length) === 58) {
+      // check for t2-t6
+      if (content.substr(pos+length+1, 3).match(/t[2-6]:/)) {
+        length += 3;
+      }
       break;
     }
 
-    if (pos+length > state.posMax) {
-      return false;
+    if (pos+length > content.length) {
+      return;
     }
   }
 
   if (length === MAX_NAME_LENGTH) {
-    return false;
+    return;
   }
 
-  let name = state.src.substr(pos, length);
+  return content.substr(pos, length);
+}
+
+// straight forward :smile: to emoji image
+function getEmojiTokenByName(name, state) {
 
   let info;
-  if (info = imageFor(name, discourseOptions)) {
-
-    let token = state.push('emoji', 'img', 0);
+  if (info = imageFor(name, state.md.options.discourse)) {
+    let token = new state.Token('emoji', 'img', 0);
     token.attrs = [['src', info.url],
                    ['title', info.title],
                    ['class', info.classes],
                    ['alt', info.title]];
 
-    state.pos = pos + length + 1;
-
-    return true;
+    return token;
   }
 }
 
-// translations are "text" shortcuts like :) and :( and ;)
-function applyEmojiTranslations(state, isSpace, isPunctChar, discourseOptions) {
+function getEmojiTokenByTranslation(content, pos, state) {
+
   translationTree = translationTree || buildTranslationTree();
 
-  let pos = state.pos;
   let currentTree = translationTree;
 
   let i;
-
   let search = true;
   let found = false;
 
   while(search) {
 
     search = false;
+    let code = content.charCodeAt(pos);
 
     for (i=0;i<currentTree.length;i++) {
-      if(currentTree[i][0] === state.src.charCodeAt(pos)) {
+      if(currentTree[i][0] === code) {
         currentTree = currentTree[i][1];
         pos++;
         search = true;
@@ -156,49 +158,80 @@ function applyEmojiTranslations(state, isSpace, isPunctChar, discourseOptions) {
   // quick boundary check
   if (state.pos > 0) {
     let leading = state.src.charAt(state.pos-1);
-    if (!isSpace(leading.charCodeAt(0)) && !isPunctChar(leading)) {
+    if (!state.md.utils.isSpace(leading.charCodeAt(0)) && !state.md.utils.isPunctChar(leading)) {
       return false;
     }
   }
 
   // check trailing for punct or space
-  if (pos < state.posMax) {
+  if (pos < content.length) {
     let trailing = state.src.charCodeAt(pos+1);
-    if (!isSpace(trailing)){
-      return false;
+    if (!state.md.utils.isSpace(trailing)){
+      return;
     }
   }
 
-
-  let info;
-  if (info = imageFor(found, discourseOptions)) {
-
-    let token = state.push('emoji', 'img', 0);
-    token.attrs = [['src', info.url],
-                   ['title', info.title],
-                   ['class', info.classes],
-                   ['alt', info.title]];
-
-    state.pos = pos+1;
-
-    return true;
+  let token = getEmojiTokenByName(found, state);
+  if (token) {
+    return { pos, token };
   }
-
-  return false;
 }
 
-function applyEmoji(state, silent, isSpace, isPunctChar, discourseOptions) {
-  if (!silent) {
-    return applyEmojiName(state, isSpace, isPunctChar, discourseOptions) || applyEmojiTranslations(state, isSpace, isPunctChar, discourseOptions);
-  }
+function applyEmoji(content, state) {
+
+    let i;
+    let result = null;
+    let contentToken = null;
+
+    let start = 0;
+
+    let endToken = content.length;
+
+    for (i=0; i<content.length-1; i++) {
+      let offset = 0;
+      let emojiName = getEmojiName(content,i,state);
+      let token = null;
+
+      if (emojiName) {
+        token = getEmojiTokenByName(emojiName, state);
+        if (token) {
+          offset = emojiName.length+2;
+        }
+      }
+
+      if (!token) {
+        // handle aliases (note: we can't do this in inline cause ; is not a split point)
+        let info = getEmojiTokenByTranslation(content, i, state);
+        if (info) {
+          offset = info.pos - i;
+          token = info.token;
+        }
+      }
+
+      if (token) {
+        result = result || [];
+        if (i-start>0) {
+          contentToken = new state.Token('text', '', 0);
+          contentToken.content = content.slice(start,i);
+          result.push(contentToken);
+        }
+
+        result.push(token);
+
+        endToken = start = i + offset;
+
+      }
+    }
+
+    if (endToken < content.length) {
+      contentToken = new state.Token('text', '', 0);
+      contentToken.content = content.slice(endToken);
+      result.push(contentToken);
+    }
+
+    return result;
 }
 
 export default function(md) {
-  md.inline.ruler.push('emoji', (state,silent) => applyEmoji(
-        state,
-        silent,
-        md.utils.isSpace,
-        md.utils.isPunctChar,
-        md.options.discourse
-  ));
+  md.core.ruler.push('emoji', state => textReplace(state, applyEmoji));
 }

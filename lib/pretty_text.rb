@@ -153,35 +153,39 @@ module PrettyText
         end
       end
 
-      context.eval("__optInput = {};")
-      context.eval("__optInput.siteSettings = #{SiteSetting.client_settings_json};")
-      context.eval("__paths = #{paths.to_json};")
-
-      if opts[:topicId]
-        context.eval("__optInput.topicId = #{opts[:topicId].to_i};")
-      end
-
-      context.eval("__optInput.userId = #{opts[:user_id].to_i};") if opts[:user_id]
-
-      context.eval("__optInput.getURL = __getURL;")
-      context.eval("__optInput.getCurrentUser = __getCurrentUser;")
-      context.eval("__optInput.lookupAvatar = __lookupAvatar;")
-      context.eval("__optInput.getTopicInfo = __getTopicInfo;")
-      context.eval("__optInput.categoryHashtagLookup = __categoryLookup;")
-      context.eval("__optInput.mentionLookup = __mentionLookup;")
-
       custom_emoji = {}
       Emoji.custom.map { |e| custom_emoji[e.name] = e.url }
-      context.eval("__optInput.customEmoji = #{custom_emoji.to_json};")
 
-      context.eval('__textOptions = __buildOptions(__optInput);')
+      buffer = <<JS
+__optInput = {};
+__optInput.siteSettings = #{SiteSetting.client_settings_json};
+__paths = #{paths.to_json};
+__optInput.getURL = __getURL;
+__optInput.getCurrentUser = __getCurrentUser;
+__optInput.lookupAvatar = __lookupAvatar;
+__optInput.getTopicInfo = __getTopicInfo;
+__optInput.categoryHashtagLookup = __categoryLookup;
+__optInput.mentionLookup = __mentionLookup;
+__optInput.customEmoji = #{custom_emoji.to_json};
+JS
+
+      if opts[:topicId]
+        buffer << "__optInput.topicId = #{opts[:topicId].to_i};"
+      end
+
+      if opts[:user_id]
+        buffer << "__optInput.userId = #{opts[:user_id].to_i};"
+      end
+
+      buffer << "__textOptions = __buildOptions(__optInput);"
 
       # Be careful disabling sanitization. We allow for custom emails
       if opts[:sanitize] == false
-        context.eval('__textOptions.sanitize = false;')
+        buffer << ('__textOptions.sanitize = false;')
       end
 
-      opts = context.eval("__pt = new __PrettyText(__textOptions);")
+      buffer << ("__pt = new __PrettyText(__textOptions);")
+      opts = context.eval(buffer)
 
       DiscourseEvent.trigger(:markdown_context, context)
       baked = context.eval("__pt.cook(#{text.inspect})")

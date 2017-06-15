@@ -23,6 +23,7 @@ export default function(opts) {
     engine.use(onebox);
   }
 
+
   if (opts.features.emoji) {
     engine.use(emoji);
   }

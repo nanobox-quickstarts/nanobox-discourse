@@ -156,28 +156,28 @@ module PrettyText
       custom_emoji = {}
       Emoji.custom.map { |e| custom_emoji[e.name] = e.url }
 
-      buffer = <<JS
-__optInput = {};
-__optInput.siteSettings = #{SiteSetting.client_settings_json};
-__paths = #{paths.to_json};
-__optInput.getURL = __getURL;
-__optInput.getCurrentUser = __getCurrentUser;
-__optInput.lookupAvatar = __lookupAvatar;
-__optInput.getTopicInfo = __getTopicInfo;
-__optInput.categoryHashtagLookup = __categoryLookup;
-__optInput.mentionLookup = __mentionLookup;
-__optInput.customEmoji = #{custom_emoji.to_json};
-JS
+      buffer = <<~JS
+        __optInput = {};
+        __optInput.siteSettings = #{SiteSetting.client_settings_json};
+        __paths = #{paths.to_json};
+        __optInput.getURL = __getURL;
+        __optInput.getCurrentUser = __getCurrentUser;
+        __optInput.lookupAvatar = __lookupAvatar;
+        __optInput.getTopicInfo = __getTopicInfo;
+        __optInput.categoryHashtagLookup = __categoryLookup;
+        __optInput.mentionLookup = __mentionLookup;
+        __optInput.customEmoji = #{custom_emoji.to_json};
+      JS
 
       if opts[:topicId]
-        buffer << "__optInput.topicId = #{opts[:topicId].to_i};"
+        buffer << "__optInput.topicId = #{opts[:topicId].to_i};\n"
       end
 
       if opts[:user_id]
-        buffer << "__optInput.userId = #{opts[:user_id].to_i};"
+        buffer << "__optInput.userId = #{opts[:user_id].to_i};\n"
       end
 
-      buffer << "__textOptions = __buildOptions(__optInput);"
+      buffer << "__textOptions = __buildOptions(__optInput);\n"
 
       # Be careful disabling sanitization. We allow for custom emails
       if opts[:sanitize] == false

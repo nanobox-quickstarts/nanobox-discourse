@@ -61,4 +61,8 @@ Discourse::Application.configure do
     config.developer_emails = emails.split(",").map(&:downcase).map(&:strip)
   end
 
+  # NANOBOX: we don't want to generate this thing in production. We'll just do
+  # it locally and deploy with it (we don't want /db to be writable)
+  config.active_record.dump_schema_after_migration = false
+
 end

@@ -16,16 +16,18 @@ END
     raise "Invalid host_names in database.yml"
   end
 
-  if !Dir.glob(File.join(Rails.root,'public','assets','application*.js')).present?
-    puts <<END
-
-      Assets have not been precompiled. Please run the following command
-      before starting the rails server in production mode:
-
-          rake assets:precompile
-
-END
-
-    raise "Assets have not been precompiled"
-  end
+# NANOBOX: This doesn't seem to work with lib/tasks/assets.rb... anyway, we don't
+# need it because we know we'll be compiling assets
+#   if !Dir.glob(File.join(Rails.root,'public','assets','application*.js')).present?
+#     puts <<END
+#
+#       Assets have not been precompiled. Please run the following command
+#       before starting the rails server in production mode:
+#
+#           rake assets:precompile
+#
+# END
+#
+#     raise "Assets have not been precompiled"
+#   end
 end

@@ -1,10 +1,13 @@
 development:
   prepared_statements: false
   adapter: postgresql
-  database: discourse_development
+  database: gonano
   min_messages: warning
   pool: 5
   timeout: 5000
+  host: <%= ENV['DATA_DB_HOST'] %>
+  username: <%= ENV['DATA_DB_USER'] %>
+  password: <%= ENV['DATA_DB_PASS'] %>
   host_names:
     ### Don't include the port number here. Change the "port" site setting instead, at /admin/site_settings.
     ### If you change this setting you will need to

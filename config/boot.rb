@@ -23,3 +23,13 @@ if ENV['RAILS_ENV'] != 'production'
     compile_cache_yaml:   false        # Skip YAML cache for now, cause we were seeing issues with it
   )
 end
+
+# NANOBOX: change the default binding from localhost to 0.0.0.0
+require 'rails/commands/server'
+module Rails
+  class Server
+    def default_options
+      super.merge(Host: '0.0.0.0', Port: 8080)
+    end
+  end
+end

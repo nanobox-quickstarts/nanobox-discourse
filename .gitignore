@@ -29,7 +29,10 @@ public/tombstone/*
 /bundle/*
 
 config/discourse.pill
-config/discourse.conf
+
+# NANOBOX: it's ok to commit this because we're using EVARS that are generated for
+# us by nanobox. This way the app will be ready to run anytime, anywhere.
+# config/discourse.conf
 
 # Ignore the default SQLite database and db dumps
 *.sql

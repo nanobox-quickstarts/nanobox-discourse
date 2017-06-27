@@ -1,0 +1,69 @@
+run.config:
+  engine: ruby
+  extra_packages:
+    - git
+    - nodejs
+    - nginx
+    - ImageMagick
+    - optipng
+    - jpegoptim
+    - gifsicle
+    - jhead
+  extra_steps:
+    - yarn install
+  extra_path_dirs:
+    - node_modules/.bin
+  cache_dirs:
+    - .bundle
+    - vendor/bundle
+    - node_modules
+
+#
+deploy.config:
+  before_live:
+    web.main:
+      # - bundle exec rake db:setup_or_migrate
+      - bundle exec rake db:migrate RAILS_ENV=production
+      - bundle exec rake assets:precompile --trace RAILS_ENV=production PRECOMPILE=true
+
+#
+web.main:
+  start:
+    nginx: nginx -c /app/config/nginx.conf
+    puma: bundle exec puma -C /app/config/puma.rb
+  writable_dirs:
+    - log
+    - plugins
+    - public
+  network_dirs:
+    data.assets:
+      - public/assets
+      - tmp
+  log_watch:
+    rails[discourse]: log/production.log
+    puma: log/puma.log
+
+#
+worker.main:
+  start: bundle exec sidekiq
+  writable_dirs:
+    - log
+    - plugins
+    - public
+  network_dirs:
+    data.assets:
+      - tmp
+  log_watch:
+    sidekiq: log/sidekiq.log
+
+#
+data.db:
+  image: nanobox/postgresql:9.4
+
+#
+data.assets:
+  image: nanobox/unfs
+
+#
+data.redis:
+  image: nanobox/redis

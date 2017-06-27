@@ -89,3 +89,19 @@ task 'db:rebuild_indexes' => 'environment' do
     Discourse.disable_readonly_mode
   end
 end
+
+# NANOBOX: this is an optional step; if you don't use `gonano` as the database
+# you'll need to create or migrate on deploy.
+
+# if the database doesn't exist yet it needs to be created, otherwise just run
+# any pending migrations
+# desc 'Either sets up the db or migrates it depending on state of db'
+# task 'db:setup_or_migrate' => 'environment' do
+#   begin
+#     ActiveRecord::Base.connection
+#   rescue ActiveRecord::NoDatabaseError
+#     Rake::Task["db:setup"].invoke
+#   else
+#     Rake::Task["db:migrate"].invoke
+#   end
+# end

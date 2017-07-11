@@ -32,16 +32,6 @@ nanobox dns add local discourse.dev
 nanobox run
 ```
 
-**IMPORTANT:** There is a chance `bundle install` will fail due to conflicts with `nokogiri` and `ImageMagick`.
-
-If this happens:
-  * `exit` the Nanobox console.
-  * Comment out `ImageMagick` from `extra_packages` in the `boxfile.yml`.
-  * `nanobox run` (again).
-  * `exit` (again).
-  * Uncomment `ImageMagick` from `extra_packages` in the `boxfile.yml`.
-  * `nanobox run` a final time.
-
 From inside the Nanobox console you'll run data migrations, create a new admin user, and start your app:
 
 ```bash

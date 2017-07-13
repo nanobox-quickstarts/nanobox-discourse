@@ -23,6 +23,10 @@ deploy.config:
   before_live:
     web.main:
       # - bundle exec rake db:setup_or_migrate
+      - mkdir -p tmp/ember-rails
+      - touch tmp/ember-rails/ember.js
+      - touch tmp/ember-rails/ember-data.js
+      - chmod +w tmp/ember-rails/*
       - bundle exec rake db:migrate RAILS_ENV=production
       - bundle exec rake assets:precompile --trace RAILS_ENV=production PRECOMPILE=true
 
@@ -48,7 +52,6 @@ worker.main:
   start: bundle exec sidekiq
   writable_dirs:
     - log
-    - plugins
     - public
   network_dirs:
     data.assets:
